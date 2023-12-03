@@ -11,6 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -34,37 +36,45 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 
     @Override
-    public String saveUser(UserCredentials credential) {
+    public ResponseEntity<String> saveUser(UserCredentials credential) {
         try {
+            if(validateRequestBody(credential)) {
+                throw new NullPointerException();
+            }
             String encrypted = passwordEncoder.encode(credential.getPassword());
             credential.setId(UUID.randomUUID().toString().split("-")[0]);
             credential.setPassword(encrypted);
             repository.save(credential);
-            return "user added to the system";
+            return ResponseEntity.ok("User added to the system");
         } catch(DataAccessException | NullPointerException e) {
             logger.error("error saving user credentials");
-            return "error saving user details";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error saving user details");
         }
     }
 
     @Override
-    public String generateToken(String username) {
+    public ResponseEntity<String> generateToken(String username) {
         try {
-            return jwtService.generateToken(username);
+            return ResponseEntity.ok(jwtService.generateToken(username));
         } catch (JwtException e) {
             logger.error("token cannot be generated", e);
-            return "token generation error";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("token generation error");
         }
     }
 
     @Override
-    public String validateToken(String token) {
+    public ResponseEntity<String> validateToken(String token) {
         try {
-            return jwtService.validateToken(token);
+            return ResponseEntity.ok(jwtService.validateToken(token));
         } catch (JwtException e) {
             logger.error("token cannot be validated", e);
-            return "token validation error";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("token validation error");
         }
+    }
+
+    private Boolean validateRequestBody(UserCredentials credentials) {
+        return credentials.getName() == null || credentials.getPassword() == null
+                || credentials.getName().isEmpty() || credentials.getPassword().isEmpty();
     }
 
 }
