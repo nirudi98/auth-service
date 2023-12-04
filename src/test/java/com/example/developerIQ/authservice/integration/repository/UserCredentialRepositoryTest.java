@@ -32,7 +32,7 @@ public class UserCredentialRepositoryTest {
     @BeforeEach
     void setUp() {
         List<UserCredentials> credentialsList = List.of(new UserCredentials
-                (null,"test_nuri", "1234","testmail@gmail.com"));
+                ("12345","test_nuri", "1234","testmail@gmail.com"));
         userCredentialRepository.saveAll(credentialsList);
     }
 
