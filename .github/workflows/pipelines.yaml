@@ -10,11 +10,12 @@ env:
   GKE_CLUSTER: developeriq-cluster
   GKE_ZONE: us-central1-c
   DEPLOYMENT_NAME: auth-service
-  IMAGE: gcr.io/${{ secrets.GKE_PROJECT }}/niruddya98/auth-service
+  IMAGE: niruddya98/auth-service
   TAG: latest
 
 jobs:
-  build-and-deploy:
+  setup-build-publish-deploy:
+    name: Setup Build Publish Deploy
     runs-on: ubuntu-latest
 
     steps:
@@ -25,9 +26,23 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 17
+          server-id: github
+          settings-path: ${{ github.workspace }}
 
-      - name: Build Docker Image
-        run: docker build -t $IMAGE:$TAG .
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+
+      - name: Install Google Cloud SDK
+        run: |
+          curl https://sdk.cloud.google.com | bash
+          source /home/runner/google-cloud-sdk/path.bash.inc
+
+      - name : add gcloud repo and update
+        run: |
+          curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+          echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+          sudo apt-get update && sudo apt-get install google-cloud-cli
+          sudo apt-get install google-cloud-sdk-gke-gcloud-auth-plugin
 
       - name: Authenticate with Google Cloud
         uses: google-github-actions/auth@v2
@@ -37,18 +52,23 @@ jobs:
       - name: Configure Docker
         run: gcloud --quiet auth configure-docker
 
-      - name: Push Docker Image to GCR
-        run: docker push $IMAGE:$TAG
+      - name: Get GKE Credentials
+        run: gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
 
-      - name: Set up kubectl
-        uses: GoogleCloudPlatform/github-actions/setup-gke@master
-        with:
-          cluster-name: $GKE_CLUSTER
-          location: $GKE_ZONE
-          project-id: $PROJECT_ID
-          service-account-key: ${{ secrets.GKE_SA_KEY }}
+      - name: Build Docker Image
+        run: docker build --tag "gcr.io/$PROJECT_ID/$IMAGE:$TAG" .
 
-      - name: Update Deployment Image
+      - name: Publish Docker Image to GCR
+        run: docker push "gcr.io/$PROJECT_ID/$IMAGE:$TAG"
+
+      - name: Set up Kustomize
         run: |
-          kubectl set image deployment/${DEPLOYMENT_NAME} ${DEPLOYMENT_NAME}=${IMAGE}:${TAG}
-          kubectl rollout status deployment/${DEPLOYMENT_NAME}
+          curl -sfLo kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/v3.1.0/kustomize_3.1.0_linux_amd64
+          chmod u+x ./kustomize
+
+      - name: Deploy Image to GKE cluster
+        run: |
+          ./kustomize edit set image gcr.io/PROJECT_ID/IMAGE:TAG=gcr.io/$PROJECT_ID/$IMAGE:$TAG
+          ./kustomize build . | kubectl apply -f -
+          kubectl rollout status deployment/$DEPLOYMENT_NAME
+          kubectl get services -o wide
