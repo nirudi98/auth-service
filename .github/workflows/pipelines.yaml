@@ -32,6 +32,9 @@ jobs:
      - name: Build with Maven
        run: mvn clean package -DskipTests
 
+     - name: Login to Google Cloud
+       run: gcloud auth login
+
 #     - name: Setup Google Cloud CLI
 #       uses: GoogleCloudPlatform/github-actions/setup-gcloud@v1
 #       env:
