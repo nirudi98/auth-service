@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: auth-service
-          image: niruddya98/auth-service:latest
-          imagePullPolicy: IfNotPresent
+          image: gcr.io/PROJECT_ID/IMAGE:TAG
+          imagePullPolicy: Always
           ports:
             - containerPort: 8888
