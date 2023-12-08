@@ -38,7 +38,7 @@ jobs:
           source /home/runner/google-cloud-sdk/path.bash.inc
 
       - name: Install gke-gcloud-auth-plugin
-        run: gcloud components install gke-gcloud-auth-plugin
+        run: sudo apt-get install google-cloud-sdk-gke-gcloud-auth-plugin
 
       - name: Authenticate with Google Cloud
         uses: google-github-actions/auth@v2
