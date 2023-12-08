@@ -10,8 +10,8 @@ env:
   GKE_CLUSTER: developeriq-cluster
   GKE_ZONE: us-central1-c
   DEPLOYMENT_NAME: auth-service
-  IMAGE: niruddya98/auth-service:latest
-  TAG: 1.0.0
+  IMAGE: niruddya98/auth-service
+  TAG: latest
 
 jobs:
   setup-build-publish-deploy:
