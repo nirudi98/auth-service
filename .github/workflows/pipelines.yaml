@@ -73,6 +73,12 @@ jobs:
         curl -sfLo kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/v3.1.0/kustomize_3.1.0_linux_amd64
         chmod u+x ./kustomize
 
+     - name: Auth
+       id: Auth
+       uses: google-github-actions/auth@v0
+       with:
+         credentials_json: ${{ secrets.GKE_SA_KEY }}
+
      - name: Deploy Image to GKE cluster
        run: |-
         ./kustomize edit set image gcr.io/PROJECT_ID/IMAGE:TAG=gcr.io/$PROJECT_ID/$IMAGE:$TAG
