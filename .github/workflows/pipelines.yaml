@@ -41,7 +41,7 @@ jobs:
         run: docker push $IMAGE:$TAG
 
       - name: Set up kubectl
-        uses: GoogleCloudPlatform/github-actions/setup-gke@v1
+        uses: GoogleCloudPlatform/github-actions/setup-gke@master
         with:
           cluster-name: $GKE_CLUSTER
           location: $GKE_ZONE
