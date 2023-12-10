@@ -42,4 +42,9 @@ public class AuthenticationController {
         return authenticationService.validateToken(token);
     }
 
+    @GetMapping("/health-check")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.status(HttpStatus.OK).body("Health Check OK");
+    }
+
 }
