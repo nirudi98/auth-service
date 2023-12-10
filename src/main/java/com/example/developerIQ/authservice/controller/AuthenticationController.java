@@ -42,7 +42,7 @@ public class AuthenticationController {
         return authenticationService.validateToken(token);
     }
 
-    @GetMapping("/health-check")
+    @GetMapping("/healthz")
     public ResponseEntity<String> healthCheck() {
         return ResponseEntity.status(HttpStatus.OK).body("Health Check OK");
     }
